@@ -21,7 +21,7 @@ def NeuralNetwork( NumberNodes, fileName):
 	
 	numero = NumberNodes
 	first = True
-	numeroPrueba = 5
+	numeroPrueba = 1000
 	while numeroPrueba > 0:
 		j=0
 		while j < len(ValueX):
@@ -88,7 +88,7 @@ def Training(X,Y,clase):
 	global primeraCorrida
 	if primeraCorrida == 0:
 		print "Valor final"
-		print final.out
+		print error
 		print "-------------"
 		primeraCorrida = 1
 		
@@ -96,18 +96,22 @@ def Training(X,Y,clase):
 
 	#cambio el peso en cada nodo de la capa intermedia al nodo final
 	#dependiendo del error
-	for node in X.next:
+	k = 0
+	while k < len(X.next):
+		node = X.next[k]
+
 		cambio = error*node.out
 		node.weight[0] = node.weight[0] + cambio
 		error2 = node.out*(1-node.out)*(node.weight[0]*error)
-		k = 0
+
 		
 		#Cambio los pesos de los elementos iniciales despues de calcular el error2 de cada nodo
 		#intermedip
-		while k < len(X.next):
-			X.weight[k] = X.weight[k] + error2*X.out
-			Y.weight[k] = Y.weight[k] + error2*Y.out
-			k = k + 1
+
+		X.weight[k] = X.weight[k] + error2*X.out
+		Y.weight[k] = Y.weight[k] + error2*Y.out
+
+		k = k+1
 
 
 
@@ -168,6 +172,6 @@ def PruebaErrorRec(node,numero,clase):
 	return PruebaErrorRec(k,numero-1,clase)
 
 
-red = NeuralNetwork(2,"datos_P1_RN_EM2016_n1000.txt")
+red = NeuralNetwork(2,"datos_P1_RN_EM2016_n500.txt")
 print "final"
 # print CorridaInicio(red[0],red[1])
