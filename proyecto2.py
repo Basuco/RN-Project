@@ -21,13 +21,19 @@ def NeuralNetwork( NumberNodes, fileName):
 	
 	numero = NumberNodes
 	first = True
-	numeroPrueba = 1000
+	numeroPrueba = 5
 	while numeroPrueba > 0:
 		j=0
 		while j < len(ValueX):
 			if first:
 				x = Node()
 				y = Node()
+
+				BiasHidden = Node()
+				BiasFinal = Node()
+
+				BiasHidden.out = 1
+				BiasFinal.out = 1
 				first = False
 
 				# x.weight = math.floor(random.uniform(10,50))/100
@@ -35,18 +41,24 @@ def NeuralNetwork( NumberNodes, fileName):
 
 				final = Node()
 
+				BiasFinal.next = final
+				BiasFinal.weight.append(math.floor(random.uniform(10,50))/100)
+
 				k = 0
 				listaNodos = list()
 				while k<NumberNodes:
 					x.weight.append(math.floor(random.uniform(10,50))/100)
 					y.weight.append(math.floor(random.uniform(10,50))/100)
 					
+					BiasHidden.weight.append(math.floor(random.uniform(10,50))/100)
+
 					listaNodos.append(Node())
 					listaNodos[k].next = final
 					listaNodos[k].weight.append(math.floor(random.uniform(10,50))/100)
 					
 					k = k+1
 				
+				BiasHidden.next = listaNodos
 				x.next = listaNodos
 				y.next = listaNodos
 				
@@ -56,7 +68,7 @@ def NeuralNetwork( NumberNodes, fileName):
 			x.out = ValueX[j]
 			y.out = ValueY[j]
 
-			Training(x,y,int(clases[j]))
+			Training(x,y,int(clases[j]), BiasHidden, BiasFinal)
 			#result = Training(x,y,numero,int(clases[j]))
 			j = j+1
 
@@ -65,18 +77,18 @@ def NeuralNetwork( NumberNodes, fileName):
 		numeroPrueba = numeroPrueba - 1
 	return [x,y]
 
-def Training(X,Y,clase):
+def Training(X,Y,clase,BiasHidden, BiasFinal):
 	k = 0
 	#le calculo el out a cada nodo de la capa intermedia
 	while k < len(X.next):
-		net = X.out*X.weight[k] + Y.out*Y.weight[k] ### + BIAS
+		net = X.out*X.weight[k] + Y.out*Y.weight[k] + BiasHidden.out*BiasHidden.weight[k] ### + BIAS
 		X.next[k].out = 1/(1+math.exp(-net))
 		k=k+1
 
 	# Calculo el net para calcular el out del nodo final
 	net = 0
 	for node in X.next:
-		net = net + node.out*node.weight[0]
+		net = net + node.out*node.weight[0] + BiasFinal.out*BiasFinal.weight[0]
 
 	final = X.next[0].next
 
@@ -87,7 +99,11 @@ def Training(X,Y,clase):
 	error = final.out*(1-final.out)*(clase-final.out)
 	global primeraCorrida
 	if primeraCorrida == 0:
+		print "Debe ser"
+		print clase
 		print "Valor final"
+		print final.out
+		print "Error final"
 		print error
 		print "-------------"
 		primeraCorrida = 1
@@ -97,6 +113,7 @@ def Training(X,Y,clase):
 	#cambio el peso en cada nodo de la capa intermedia al nodo final
 	#dependiendo del error
 	k = 0
+	BiasFinal.weight[0] = BiasFinal.weight[0] - error*BiasFinal.out
 	while k < len(X.next):
 		node = X.next[k]
 
@@ -108,6 +125,7 @@ def Training(X,Y,clase):
 		#Cambio los pesos de los elementos iniciales despues de calcular el error2 de cada nodo
 		#intermedip
 
+		BiasHidden.weight[k] = BiasHidden.weight[k] + error2*BiasHidden.out
 		X.weight[k] = X.weight[k] + error2*X.out
 		Y.weight[k] = Y.weight[k] + error2*Y.out
 
