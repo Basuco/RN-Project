@@ -2,7 +2,10 @@
 import math
 import random
 
-globalerror = 1;
+globalerror = 1
+numeroPrueba = 10
+global primeraCorrida
+primeraCorrida = 0
 
 class Node(object):
 	def __init__(self):
@@ -17,48 +20,87 @@ def NeuralNetwork( NumberNodes, fileName):
 	clases = matriz[2]
 	numero = NumberNodes
 	first = True
-	while globalerror > 0.9:
+	# while globalerror > 0.9:
+	numeroPrueba = 100
+	while numeroPrueba > 0:
 		j=0
-		while j < len(ValueX):
-			x = Node()
-			y = Node()
-				
-			x.weight = math.floor(random.uniform(10,50))/100
-			y.weight = math.floor(random.uniform(10,50))/100
-				
-			x.next = Node()
-			y.next = x.next
+		while j < 1:
+			if first:
+				x = Node()
+				y = Node()
+				first = False
+				x.weight = math.floor(random.uniform(10,50))/100
+				y.weight = math.floor(random.uniform(10,50))/100
+				x.next = Node()
+				y.next = x.next
 
 			x.out = ValueX[j]
 			y.out = ValueY[j]
 
-			z = x.next
-			net = x.out*x.weight + y.out*y.weight
-			z.out = 1/(1+math.exp(-net))
-			print "aqui"
-			if first:
-				error = firsterrorValue(z,numero,int(clases[j]))
-				first = False
-			else:
-				error = ProxerrorValue(z,numero,int(clases[j]))
-				x.weight = x.weight + error*x.next.out
-				y.weight = y.weight + error*y.next.out
-			j = j+1
-	return [x,y]
+			result = Training(x,y,numero,int(clases[j]))
 
-def firsterrorValue(node,numero,clase):
-	node.weight = math.floor(random.uniform(10,50))/100
-	node.next = Node()
-	k = node.next
-	net = node.out*node.weight
+
+			# if first:
+			# 	error = firsterrorValue(z,numero,int(clases[j]))
+			# 	first = False
+			# else:
+			# 	error = ProxerrorValue(z,numero,int(clases[j]))
+			# 	x.weight = x.weight + error*x.next.out
+			# 	y.weight = y.weight + error*y.next.out
+
+			j = j+1
+
+
+		numeroPrueba = numeroPrueba - 1
+		# x.out = ValueX[0]
+		# y.out = ValueY[0]
+	return [x,y]
+def Training(X,Y,numero,clase):
+	if primeraCorrida < 1:
+		z = Node()
+		X.next = z
+		Y.next = z
+	else:
+		z = X.next
+	net = X.out*X.weight + Y.out*Y.weight
+	z.out = 1/(1+math.exp(-net))
+	z.weight = math.floor(random.uniform(10,50))/100
+
+	error = TrainingREC(z,numero-1,clase)
+
+	X.weight = X.weight + error*X.out
+	Y.weight = Y.weight + error*Y.out
+
+	return [X,Y]
+
+
+def TrainingREC(Z,numero,clase):
+	if primeraCorrida < 1:
+		k = Node()
+		k.weight = math.floor(random.uniform(10,50))/100
+		Z.next = k
+	else:
+		k = Z.next
+	
+	net = Z.out*Z.weight
 	k.out = 1/(1+math.exp(-net))
-	if numero == 0:
+
+	global primeraCorrida
+
+	if numero == 0 :
+		error = (k.out*(1-k.out)*(clase-k.out))
+		globalerror = error
+		print "resultado"
 		print k.out
-		globalerror = abs(k.out)
-		return (k.out*(1-k.out)*(clase-k.out))
-	error = firsterrorValue(k,numero-1,clase)
-	node.weight = node.weight + error*node.out
-	return node.out*(1-node.out)*(node.weight*error)
+		print"error"
+		print globalerror
+		primeraCorrida = 1
+		return error
+	
+	error = TrainingREC(k,numero-1,clase)
+	k.weight = k.weight + error*k.out
+	nuevoError = k.out*(1-k.out)*(k.weight*error)
+	return nuevoError
 
 def readFile(fileName):
 	with open(fileName) as file:
@@ -89,19 +131,9 @@ def readFile(fileName):
 			clases.append(int(clase))
 	return [x,y,clases]
 
-def ProxerrorValue(node,numero,clase):
-	k = node.next
-	net = node.out*node.weight
-	k.out = 1/(1+math.exp(-net))
-	if numero == 0:
-		return (k.out*(1-k.out)*(clase-k.out))
-	error = ProxerrorValue(k,numero-1,clase)
-	node.weight = node.weight + error*node.out
-	return node.out*(1-node.out)*(node.weight*error)
-
 def CorridaInicio(X,Y):
 	z = X.next
-	net = 3.46445855216*X.weight + 7.53911914165*Y.weight
+	net = X.out*X.weight + Y.out*Y.weight
 	z.out = 1/(1+math.exp(-net))
 	return CorridaRec(z,2)
 
@@ -114,5 +146,21 @@ def CorridaRec(node,numero):
 	return CorridaRec(k,numero-1)
 
 
+def PruebaError(X,Y,clase):
+	z = X.next
+	net = X.out*X.weight + Y.out*Y.weight
+	z.out = 1/(1+math.exp(-net))
+	return PruebaErrorRec(z,2,clase)
+
+def PruebaErrorRec(node,numero,clase):
+	k = node.next
+	net = node.out*node.weight
+	k.out = 1/(1+math.exp(-net))
+	if numero == 0:
+		return abs((k.out*(1-k.out)*(clase-k.out)))
+	return PruebaErrorRec(k,numero-1,clase)
+
+
 red = NeuralNetwork(2,"datos_P1_RN_EM2016_n500.txt")
-print CorridaInicio(red[0],red[1])
+print "final"
+# print CorridaInicio(red[0],red[1])
