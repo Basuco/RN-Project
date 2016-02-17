@@ -14,8 +14,8 @@ def NeuralNetwork( NumberNodes, fileName):
 		x = Node()
 		y = Node()
 		
-		x.weight = 0.4
-		y.weight = 0.4
+		x.weight = math.floor(random.uniform(10,50))/100
+		y.weight = math.floor(random.uniform(10,50))/100
 		
 		x.next = Node()
 		y.next = x.next
@@ -52,12 +52,12 @@ def NeuralNetwork( NumberNodes, fileName):
 			else:
 				error = ProxerrorValue(z,numero,int(clase))
 
-			x.weight = x.weight + error
-			y.weight = y.weight + error
+			x.weight = x.weight + error*x.next.out
+			y.weight = y.weight + error*y.next.out
 
 		return [x,y]
 def firsterrorValue(node,numero,clase):
-	node.weight = 0.4
+	node.weight = math.floor(random.uniform(10,50))/100
 	node.next = Node()
 	k = node.next
 	net = node.out*node.weight
@@ -80,7 +80,7 @@ def ProxerrorValue(node,numero,clase):
 
 def CorridaInicio(X,Y):
 	z = X.next
-	net = X.out*X.weight + Y.out*Y.weight
+	net = 7.89948900753*X.weight + 3.21368246031*Y.weight
 	z.out = 1/(1+math.exp(-net))
 	return CorridaRec(z,2)
 
