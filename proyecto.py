@@ -2,6 +2,8 @@
 import math
 import random
 
+globalerror = 1;
+
 class Node(object):
 	def __init__(self):
 		self.weight = None
@@ -9,24 +11,66 @@ class Node(object):
 		self.next = None
 
 def NeuralNetwork( NumberNodes, fileName):
-	with open(fileName) as file:
-		first = True;
-		x = Node()
-		y = Node()
-		
-		x.weight = math.floor(random.uniform(10,50))/100
-		y.weight = math.floor(random.uniform(10,50))/100
-		
-		x.next = Node()
-		y.next = x.next
+	matriz = readFile(fileName)
+	ValueX = matriz[0]
+	ValueY = matriz[1]
+	clases = matriz[2]
+	numero = NumberNodes
+	first = True
+	while globalerror > 0.9:
+		j=0
+		while j < len(ValueX):
+			x = Node()
+			y = Node()
+				
+			x.weight = math.floor(random.uniform(10,50))/100
+			y.weight = math.floor(random.uniform(10,50))/100
+				
+			x.next = Node()
+			y.next = x.next
 
+			x.out = ValueX[j]
+			y.out = ValueY[j]
+
+			z = x.next
+			net = x.out*x.weight + y.out*y.weight
+			z.out = 1/(1+math.exp(-net))
+			print "aqui"
+			if first:
+				error = firsterrorValue(z,numero,int(clases[j]))
+				first = False
+			else:
+				error = ProxerrorValue(z,numero,int(clases[j]))
+				x.weight = x.weight + error*x.next.out
+				y.weight = y.weight + error*y.next.out
+			j = j+1
+	return [x,y]
+
+def firsterrorValue(node,numero,clase):
+	node.weight = math.floor(random.uniform(10,50))/100
+	node.next = Node()
+	k = node.next
+	net = node.out*node.weight
+	k.out = 1/(1+math.exp(-net))
+	if numero == 0:
+		print k.out
+		globalerror = abs(k.out)
+		return (k.out*(1-k.out)*(clase-k.out))
+	error = firsterrorValue(k,numero-1,clase)
+	node.weight = node.weight + error*node.out
+	return node.out*(1-node.out)*(node.weight*error)
+
+def readFile(fileName):
+	with open(fileName) as file:
 		for line in file:
 			i = 0
-			numero = NumberNodes
+			k = 0
+			x = list()
+			y =list()
+			clases=list()
 			ValueX = ""
 			ValueY = ""
 			clase = ""
-			
 			cambio = 0
 			while i < len(line):
 				if line[i] != ' ':
@@ -40,33 +84,10 @@ def NeuralNetwork( NumberNodes, fileName):
 					cambio = cambio + 1
 				i = i + 1
 
-			x.out = float(ValueX)
-			y.out = float(ValueY)
-
-			z = x.next
-			net = x.out*x.weight + y.out*y.weight
-			z.out = 1/(1+math.exp(-net))
-			if first:
-				error = firsterrorValue(z,numero,int(clase))
-				first = False
-			else:
-				error = ProxerrorValue(z,numero,int(clase))
-
-			x.weight = x.weight + error*x.next.out
-			y.weight = y.weight + error*y.next.out
-
-		return [x,y]
-def firsterrorValue(node,numero,clase):
-	node.weight = math.floor(random.uniform(10,50))/100
-	node.next = Node()
-	k = node.next
-	net = node.out*node.weight
-	k.out = 1/(1+math.exp(-net))
-	if numero == 0:
-		return (k.out*(1-k.out)*(clase-k.out))
-	error = firsterrorValue(k,numero-1,clase)
-	node.weight = node.weight + error*node.out
-	return node.out*(1-node.out)*(node.weight*error)
+			x.append(float(ValueX))
+			y.append(float(ValueY))
+			clases.append(int(clase))
+	return [x,y,clases]
 
 def ProxerrorValue(node,numero,clase):
 	k = node.next
@@ -80,7 +101,7 @@ def ProxerrorValue(node,numero,clase):
 
 def CorridaInicio(X,Y):
 	z = X.next
-	net = 7.89948900753*X.weight + 3.21368246031*Y.weight
+	net = 3.46445855216*X.weight + 7.53911914165*Y.weight
 	z.out = 1/(1+math.exp(-net))
 	return CorridaRec(z,2)
 
