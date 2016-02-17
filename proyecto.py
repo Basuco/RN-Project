@@ -1,25 +1,33 @@
 # import numpy as np
 import math
+import random
 
+class Node(object):
+	def __init__(self):
+		self.weight = None
+		self.out = None
+		self.next = None
 
-def NeuralNetwork( NumberNodes, weight, Xvalue, Yvalue, fileName):
+def NeuralNetwork( NumberNodes, fileName):
 	with open(fileName) as file:
 		first = True;
 		x = Node()
+		y = Node()
+		
 		x.weight = 0.4
 		y.weight = 0.4
-		y = Node()
+		
 		x.next = Node()
-		x.next.weight = 0.4
 		y.next = x.next
 
 		for line in file:
 			i = 0
+			numero = NumberNodes
 			ValueX = ""
 			ValueY = ""
-			cambio = 0
 			clase = ""
-			j = math.exp(2)
+			
+			cambio = 0
 			while i < len(line):
 				if line[i] != ' ':
 					if cambio==0:
@@ -32,43 +40,58 @@ def NeuralNetwork( NumberNodes, weight, Xvalue, Yvalue, fileName):
 					cambio = cambio + 1
 				i = i + 1
 
-			x.value = float(Xvalue)
-			y.value = float(Yvalue)
+			x.out = float(ValueX)
+			y.out = float(ValueY)
 
 			z = x.next
-			z.value = (x.value*x.weight + y.value*y.weight)
-			i = 0
-			while i< NumberNodes -1:
-				z.next = Node()
-				k = z.next
-				if first:
-					k.weight = (0.4)
+			net = x.out*x.weight + y.out*y.weight
+			z.out = 1/(1+math.exp(-net))
+			if first:
+				error = firsterrorValue(z,numero,int(clase))
+				first = False
+			else:
+				error = ProxerrorValue(z,numero,int(clase))
 
-				i=i+1
+			x.weight = x.weight + error
+			y.weight = y.weight + error
 
-			first = False
-
-			# if ((float(ValueX)-10)**2 + (float(ValueY)-10)**2) < 49:
-			# 	k = k+1
+		return [x,y]
 def firsterrorValue(node,numero,clase):
 	node.weight = 0.4
 	node.next = Node()
 	k = node.next
-	k.value = (node.value*node.weight)
+	net = node.out*node.weight
+	k.out = 1/(1+math.exp(-net))
 	if numero == 0:
-		return k.value*(1-k.value)
-	return firsterrorValue(k,numero-1,clase)
+		return (k.out*(1-k.out)*(clase-k.out))
+	error = firsterrorValue(k,numero-1,clase)
+	node.weight = node.weight + error*node.out
+	return node.out*(1-node.out)*(node.weight*error)
+
+def ProxerrorValue(node,numero,clase):
+	k = node.next
+	net = node.out*node.weight
+	k.out = 1/(1+math.exp(-net))
+	if numero == 0:
+		return (k.out*(1-k.out)*(clase-k.out))
+	error = ProxerrorValue(k,numero-1,clase)
+	node.weight = node.weight + error*node.out
+	return node.out*(1-node.out)*(node.weight*error)
+
+def CorridaInicio(X,Y):
+	z = X.next
+	net = X.out*X.weight + Y.out*Y.weight
+	z.out = 1/(1+math.exp(-net))
+	return CorridaRec(z,2)
+
+def CorridaRec(node,numero):
+	k = node.next
+	net = node.out*node.weight
+	k.out = 1/(1+math.exp(-net))
+	if numero == 0:
+		return k.out
+	return CorridaRec(k,numero-1)
 
 
-
-class Node(object):
-	def __init__(self):
-		self.weight = None
-		self.value = None
-		self.next = None
-
-
-
-
-		
-print k
+red = NeuralNetwork(2,"datos_P1_RN_EM2016_n500.txt")
+print CorridaInicio(red[0],red[1])
