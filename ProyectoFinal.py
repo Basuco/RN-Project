@@ -18,9 +18,9 @@ def NeuralNetwork( NumberNodes, fileName):
 	matriz = readFile(fileName,ValueX,ValueY,clases)
 	
 	first = True
-	numeroPrueba = 3
+	numeroPrueba = 1000
 	PromedioError = 0
-	# while PromedioError > 0.01 or first:
+
 	while  numeroPrueba > 0:
 		pass
 		j=0
@@ -73,44 +73,33 @@ def NeuralNetwork( NumberNodes, fileName):
 		numeroPrueba = numeroPrueba - 1
 	return [ x , y , BiasHidden , BiasFinal]
 
+def GenerarValidacion():
+	matriz = list()
+	x = 0.0
+	while x < 202 :
+		y = 0.0
+		fila = list()
+		while y < 202:
+			if ((x/10-10)**2 + (y/10-10)**2) < 50:
+				clase = 1
+			else:
+				clase = 0
+			fila.append([x/10,y/10,clase])
+			y = y + 2
+		matriz.append(fila)
+		x = x + 2
+	return matriz
 
-def CorridaInicio(X,Y,BiasHidden, BiasFinal):
-	k = 0
-	#le calculo el out a cada nodo de la capa intermedia
-	while k < len(X.next):
-		net = X.out*X.weight[k] + Y.out*Y.weight[k] + BiasHidden.out*BiasHidden.weight[k] ### + BIAS
-		X.next[k].out = 1/(1+math.exp(-net))
-		k=k+1
 
-	# Calculo el net para calcular el out del nodo final
-	net = 0
-	for node in X.next:
-		net = net + node.out*node.weight[0] 
-	net = net + BiasFinal.out*BiasFinal.weight[0]
-	final = X.next[0].next
-
-	final.out = 1/(1+math.exp(-net))
-
-	return (final.out)
 
 def Training(X,Y,clase,BiasHidden, BiasFinal):
-	#le calculo el out a cada nodo de la capa intermedia
-	# print "Salida X"
-	# print X.out
-	# print "Salida Y"
-	# print Y.out
+
 	k = 0
 	while k < len(X.next):
 		net = X.out*X.weight[k] + Y.out*Y.weight[k] + BiasHidden.out*BiasHidden.weight[k] ### + BIAS
 		X.next[k].out = 1/(1+math.exp(-net))
 		k=k+1
-		# print "-------------"
-		# print "Salida nodo"
-		# print X.next[k].out
-		# print "weight nodo"
-		# print X.weight[k]
-		# print Y.weight[k]
-		# print "-------------"
+
 
 	# Calculo el net para calcular el out del nodo final
 	net = 0
@@ -121,32 +110,10 @@ def Training(X,Y,clase,BiasHidden, BiasFinal):
 
 	final.out = 1/(1+math.exp(-net))
 
-	# print "-------------"
-	# print "Salida final"
-	# print final.out
-	# print "-------------"
-	# print "-------------"
-	# print "-------------"
-	# print "-------------"
 	
 	#calculo el error que tengo con ese out final
 	error = final.out*(1-final.out)*(clase-final.out)
  
-
-	# global primeraCorrida
-	# if primeraCorrida == 0:
-	# 	print "Debe ser"
-	# 	print clase
-	# 	print "Valor final"
-	# 	print final.out
-	# 	print "Error final"
-	# 	print (clase-final.out)
-	# 	print "Variacion peso final"
-	# 	print error
-	# 	print "-------------"
-	# 	primeraCorrida = 1
-		
-
 
 	#cambio el peso en cada nodo de la capa intermedia al nodo final
 	#dependiendo del error
@@ -198,109 +165,93 @@ def readFile(fileName,X,Y, Classes):
 			X.append(float(ValueX))
 			Y.append(float(ValueY))
 			Classes.append(int(clase))
-	
 
-print "--------------PRUEBA 500--------------------"
+def CorridaInicio(X,Y,BiasHidden, BiasFinal, Validacion):
+	i = 0
+	resultados = list()
+	while i < len(Validacion):
+		j = 0
+		while j < len(Validacion):
+			X.out = Validacion[i][j][0]
+			Y.out = Validacion[i][j][1]
+
+			k = 0
+			#le calculo el out a cada nodo de la capa intermedia
+			while k < len(X.next):
+				net = X.out*X.weight[k] + Y.out*Y.weight[k] + BiasHidden.out*BiasHidden.weight[k] ### + BIAS
+				X.next[k].out = 1/(1+math.exp(-net))
+				k=k+1
+			# Calculo el net para calcular el out del nodo final
+			net = 0
+			for node in X.next:
+				net = net + node.out*node.weight[0] 
+			net = net + BiasFinal.out*BiasFinal.weight[0]
+			final = X.next[0].next
+
+			final.out = 1/(1+math.exp(-net))
+
+			resultados.append([final.out,Validacion[i][j][2]])
+
+			j = j+1
+		i = i + 1
+
+	return resultados	
+def calculoErrorPromedio(resultados):
+	x = 0
+	promedio = 0
+	while x<len(resultados):
+		promedio = promedio + abs(resultados[x][0] - resultados[x][1])
+		x = x+1
+	promedio = promedio/len(resultados)
+	return promedio
+
+
+CjtoValidacion = GenerarValidacion()
+print "--------------PRUEBA 2000--------------------"
 print ""
 print "2 Nodos"
-red = NeuralNetwork(2,"datos_P1_RN_EM2016_n500.txt")
-valor = CorridaInicio(red[0],red[1],red[2],red[3])
-print ""
+red = NeuralNetwork(2,"datos_P1_RN_EM2016_n2000.txt")
+resultados = CorridaInicio(red[0],red[1],red[2],red[3],CjtoValidacion)
+error = calculoErrorPromedio(resultados)
+print error
 print "3 Nodos"
-red = NeuralNetwork(3,"datos_P1_RN_EM2016_n500.txt")
-valor = CorridaInicio(red[0],red[1],red[2],red[3])
-
-print ""
+red = NeuralNetwork(3,"datos_P1_RN_EM2016_n2000.txt")
+resultados = CorridaInicio(red[0],red[1],red[2],red[3],CjtoValidacion)
+error = calculoErrorPromedio(resultados)
+print error
 print "4 Nodos"
-red = NeuralNetwork(4,"datos_P1_RN_EM2016_n500.txt")
-valor = CorridaInicio(red[0],red[1],red[2],red[3])
-
-print ""
+red = NeuralNetwork(4,"datos_P1_RN_EM2016_n2000.txt")
+resultados = CorridaInicio(red[0],red[1],red[2],red[3],CjtoValidacion)
+error = calculoErrorPromedio(resultados)
+print error
 print "5 Nodos"
-red = NeuralNetwork(5,"datos_P1_RN_EM2016_n500.txt")
-valor = CorridaInicio(red[0],red[1],red[2],red[3])
-
-
-print ""
+red = NeuralNetwork(5,"datos_P1_RN_EM2016_n2000.txt")
+resultados = CorridaInicio(red[0],red[1],red[2],red[3],CjtoValidacion)
+error = calculoErrorPromedio(resultados)
+print error
 print "6 Nodos"
-red = NeuralNetwork(6,"datos_P1_RN_EM2016_n500.txt")
-valor = CorridaInicio(red[0],red[1],red[2],red[3])
-
-print ""
+red = NeuralNetwork(6,"datos_P1_RN_EM2016_n2000.txt")
+resultados = CorridaInicio(red[0],red[1],red[2],red[3],CjtoValidacion)
+error = calculoErrorPromedio(resultados)
+print error
 print "7 Nodos"
-red = NeuralNetwork(7,"datos_P1_RN_EM2016_n500.txt")
-valor = CorridaInicio(red[0],red[1],red[2],red[3])
-
-print ""
+red = NeuralNetwork(7,"datos_P1_RN_EM2016_n2000.txt")
+resultados = CorridaInicio(red[0],red[1],red[2],red[3],CjtoValidacion)
+error = calculoErrorPromedio(resultados)
+print error
 print "8 Nodos"
-red = NeuralNetwork(8,"datos_P1_RN_EM2016_n500.txt")
-valor = CorridaInicio(red[0],red[1],red[2],red[3])
-
-print ""
+red = NeuralNetwork(8,"datos_P1_RN_EM2016_n2000.txt")
+resultados = CorridaInicio(red[0],red[1],red[2],red[3],CjtoValidacion)
+error = calculoErrorPromedio(resultados)
+print error
 print "9 Nodos"
-red = NeuralNetwork(9,"datos_P1_RN_EM2016_n500.txt")
-valor = CorridaInicio(red[0],red[1],red[2],red[3])
-
-print ""
+red = NeuralNetwork(9,"datos_P1_RN_EM2016_n2000.txt")
+resultados = CorridaInicio(red[0],red[1],red[2],red[3],CjtoValidacion)
+error = calculoErrorPromedio(resultados)
+print error
 print "10 Nodos"
-red = NeuralNetwork(10,"datos_P1_RN_EM2016_n500.txt")
-valor = CorridaInicio(red[0],red[1],red[2],red[3])
-
-# print "--------------PRUEBA 1000-------------------"
-# red = NeuralNetwork(2,"datos_P1_RN_EM2016_n500.txt")
-
-# print ""
-# print "3 Nodos"
-
-# print ""
-# print "4 Nodos"
-
-# print ""
-# print "5 Nodos"
-
-
-# print ""
-# print "6 Nodos"
-
-# print ""
-# print "7 Nodos"
-
-# print ""
-# print "8 Nodos"
-
-# print ""
-# print "9 Nodos"
-
-# print ""
-# print "10 Nodos"
-
-# print "--------------PRUEBA 2000-------------------"
-# red = NeuralNetwork(2,"datos_P1_RN_EM2016_n500.txt")
-# print ""
-# print "3 Nodos"
-
-# print ""
-# print "4 Nodos"
-
-# print ""
-# print "5 Nodos"
-
-
-# print ""
-# print "6 Nodos"
-
-# print ""
-# print "7 Nodos"
-
-# print ""
-# print "8 Nodos"
-
-# print ""
-# print "9 Nodos"
-
-# print ""
-# print "10 Nodos"
-# print valor
-# valor = CorridaInicio(red[0],red[1],red[2],red[3])
-# print valor
-# print CorridaInicio(red[0],red[1])
+red = NeuralNetwork(10,"datos_P1_RN_EM2016_n2000.txt")
+resultados = CorridaInicio(red[0],red[1],red[2],red[3],CjtoValidacion)
+error = calculoErrorPromedio(resultados)
+print error
+print ""
